@@ -88,6 +88,14 @@ function Admin() {
     return new Date() > expiryDate;
   };
 
+  const formatMonthYear = (date) => {
+    if (!date) return "";
+    return new Date(date).toLocaleString("en-IN", {
+      month: "long",
+      year: "numeric",
+    });
+  };
+
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>Admin Dashboard</h1>
@@ -108,7 +116,11 @@ function Admin() {
       <table style={styles.table}>
         <thead>
           <tr>
-            {["Name","Age","Phone","Membership","Start","Expiry","Status","Payment","PT","Gender","Action"].map((h) => (
+            {[
+              "Name","Age","Phone","Membership",
+              "Member Since","Expiry","Status",
+              "Payment","PT","Gender","Action"
+            ].map((h) => (
               <th key={h} style={styles.th}>{h}</th>
             ))}
           </tr>
@@ -125,10 +137,20 @@ function Admin() {
                 <td style={styles.td}>{m.age}</td>
                 <td style={styles.td}>{m.phone}</td>
                 <td style={styles.td}>{m.membership}</td>
-                <td style={styles.td}>{m.startDate?.split("T")[0]}</td>
-                <td style={styles.td}>{expiry?.toISOString().split("T")[0]}</td>
 
-                <td style={{ ...styles.td, color: expired ? "red" : "lime" }}>
+                <td style={styles.td}>
+                  {formatMonthYear(m.startDate)}
+                </td>
+
+                <td style={styles.td}>
+                  {expiry?.toISOString().split("T")[0]}
+                </td>
+
+                <td style={{
+                  ...styles.td,
+                  color: expired ? "#ef4444" : "#22c55e",
+                  fontWeight: "600"
+                }}>
                   {expired ? "Expired" : "Active"}
                 </td>
 
@@ -137,8 +159,19 @@ function Admin() {
                 <td style={styles.td}>{m.gender}</td>
 
                 <td style={styles.td}>
-                  <button onClick={() => handleEdit(m)}>Edit</button>
-                  <button onClick={() => handleDelete(m._id)}>Delete</button>
+                  <button
+                    style={styles.editBtn}
+                    onClick={() => handleEdit(m)}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    style={styles.deleteBtn}
+                    onClick={() => handleDelete(m._id)}
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             );
@@ -149,14 +182,62 @@ function Admin() {
       {editData && (
         <div style={styles.modal}>
           <div style={styles.modalContent}>
-            <h3>Edit Member</h3>
+            <h2>Edit Member</h2>
 
-            <input value={editData.name} onChange={(e)=>setEditData({...editData,name:e.target.value})}/>
-            <input value={editData.age} onChange={(e)=>setEditData({...editData,age:e.target.value})}/>
-            <input value={editData.phone} onChange={(e)=>setEditData({...editData,phone:e.target.value})}/>
+            <div style={styles.formGrid}>
+              <input value={editData.name}
+                onChange={(e)=>setEditData({...editData,name:e.target.value})}
+                placeholder="Name" />
 
-            <button onClick={handleUpdate}>Update</button>
-            <button onClick={()=>setEditData(null)}>Cancel</button>
+              <input value={editData.age}
+                onChange={(e)=>setEditData({...editData,age:e.target.value})}
+                placeholder="Age" />
+
+              <input value={editData.phone}
+                onChange={(e)=>setEditData({...editData,phone:e.target.value})}
+                placeholder="Phone" />
+
+              <select value={editData.membership}
+                onChange={(e)=>setEditData({...editData,membership:e.target.value})}>
+                <option>1 Month</option>
+                <option>3 Months</option>
+                <option>6 Months</option>
+                <option>1 Year</option>
+              </select>
+
+              <input
+                type="date"
+                value={editData.startDate?.split("T")[0]}
+                onChange={(e)=>setEditData({...editData,startDate:e.target.value})}
+              />
+
+              <select value={editData.payment}
+                onChange={(e)=>setEditData({...editData,payment:e.target.value})}>
+                <option>Cash</option>
+                <option>UPI</option>
+              </select>
+
+              <select value={editData.training}
+                onChange={(e)=>setEditData({...editData,training:e.target.value})}>
+                <option>No</option>
+                <option>Yes</option>
+              </select>
+
+              <select value={editData.gender}
+                onChange={(e)=>setEditData({...editData,gender:e.target.value})}>
+                <option>Male</option>
+                <option>Female</option>
+              </select>
+            </div>
+
+            <div style={styles.modalActions}>
+              <button style={styles.updateBtn} onClick={handleUpdate}>
+                Update
+              </button>
+              <button style={styles.cancelBtn} onClick={()=>setEditData(null)}>
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -165,17 +246,113 @@ function Admin() {
 }
 
 const styles = {
-  container:{ padding:"30px", background:"#020617", minHeight:"100vh", color:"#fff"},
-  title:{ fontSize:"28px", marginBottom:"20px"},
-  stats:{ display:"flex", gap:"20px", marginBottom:"20px"},
-  card:{ flex:1, padding:"20px", borderRadius:"12px", background:"#0ea5e9"},
-  input:{ padding:"10px", marginBottom:"20px"},
-  table:{ width:"100%"},
-  th:{ padding:"10px"},
-  tr:{ background:"#0f172a"},
-  td:{ padding:"10px"},
-  modal:{ position:"fixed", top:0,left:0,width:"100%",height:"100%",background:"rgba(0,0,0,0.7)",display:"flex",justifyContent:"center",alignItems:"center"},
-  modalContent:{ background:"#0f172a",padding:"20px"}
+  container: {
+    padding: "30px",
+    background: "#020617",
+    minHeight: "100vh",
+    color: "#fff",
+    fontFamily: "sans-serif"
+  },
+  title: {
+    fontSize: "30px",
+    fontWeight: "600",
+    marginBottom: "20px"
+  },
+  stats: {
+    display: "flex",
+    gap: "20px",
+    marginBottom: "25px"
+  },
+  card: {
+    flex: 1,
+    padding: "20px",
+    borderRadius: "14px",
+    background: "linear-gradient(135deg,#0ea5e9,#2563eb)"
+  },
+  input: {
+    padding: "12px",
+    marginBottom: "20px",
+    borderRadius: "8px",
+    border: "none",
+    width: "250px"
+  },
+  table: {
+    width: "100%",
+    borderCollapse: "separate",
+    borderSpacing: "0 10px"
+  },
+  th: {
+    textAlign: "left",
+    padding: "12px",
+    color: "#94a3b8"
+  },
+  tr: {
+    background: "#0f172a"
+  },
+  td: {
+    padding: "14px"
+  },
+  editBtn: {
+    background: "#22c55e",
+    border: "none",
+    padding: "6px 12px",
+    borderRadius: "6px",
+    marginRight: "5px",
+    cursor: "pointer",
+    color: "#fff"
+  },
+  deleteBtn: {
+    background: "#ef4444",
+    border: "none",
+    padding: "6px 12px",
+    borderRadius: "6px",
+    cursor: "pointer",
+    color: "#fff"
+  },
+  modal: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    background: "rgba(0,0,0,0.7)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  modalContent: {
+    background: "#0f172a",
+    padding: "25px",
+    borderRadius: "12px",
+    width: "500px"
+  },
+  formGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "12px",
+    marginBottom: "20px"
+  },
+  modalActions: {
+    display: "flex",
+    justifyContent: "flex-end",
+    gap: "10px"
+  },
+  updateBtn: {
+    background: "#0ea5e9",
+    color: "#fff",
+    border: "none",
+    padding: "10px 15px",
+    borderRadius: "6px",
+    cursor: "pointer"
+  },
+  cancelBtn: {
+    background: "#64748b",
+    color: "#fff",
+    border: "none",
+    padding: "10px 15px",
+    borderRadius: "6px",
+    cursor: "pointer"
+  }
 };
 
 export default Admin;
