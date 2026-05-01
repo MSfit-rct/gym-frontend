@@ -1,11 +1,11 @@
 import React from "react";
-import bgImage from "../Images/thank-bg.jpg"; // 🔥 your image
+import bgImage from "../Images/thank-bg.jpg";
 
 function ThankYou() {
   return (
     <div style={styles.container}>
       <div style={styles.overlay}>
-        <h1 style={styles.text}></h1>
+        {/* No text here */}
       </div>
     </div>
   );
@@ -24,12 +24,6 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-  },
-  text: {
-    color: "#fff",
-    fontSize: "32px",
-    fontWeight: "bold",
-    textAlign: "center",
   },
 };
 
