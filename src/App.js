@@ -2,8 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import Menu from "./Menu";
 import bgImage from "./Images/gym-bg.jpg";
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+
 // Pages
 import Registration from "./pages/Registration";
 import Admin from "./pages/Admin";
