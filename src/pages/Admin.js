@@ -9,7 +9,6 @@ function Admin() {
   const [members, setMembers] = useState([]);
   const [search, setSearch] = useState("");
   const [editData, setEditData] = useState(null);
-  const [historyData, setHistoryData] = useState(null);
 
   useEffect(() => {
     if (!localStorage.getItem("auth")) {
@@ -29,7 +28,11 @@ function Admin() {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this member?")) return;
-    await fetch(`${API}/members/${id}`, { method: "DELETE" });
+
+    await fetch(`${API}/members/${id}`, {
+      method: "DELETE",
+    });
+
     fetchMembers();
   };
 
@@ -38,10 +41,21 @@ function Admin() {
   };
 
   const handleUpdate = async () => {
+    const payload = {
+      name: editData.name,
+      age: parseInt(editData.age),
+      phone: editData.phone,
+      membership: editData.membership,
+      startDate: editData.startDate,
+      payment: editData.payment,
+      training: editData.training,
+      gender: editData.gender,
+    };
+
     await fetch(`${API}/members/${editData._id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editData),
+      body: JSON.stringify(payload),
     });
 
     setEditData(null);
@@ -54,6 +68,7 @@ function Admin() {
 
   const getExpiryDate = (startDate, membership) => {
     if (!startDate || !membership) return null;
+
     const date = new Date(startDate);
 
     if (membership === "1 Month") date.setMonth(date.getMonth() + 1);
@@ -106,7 +121,7 @@ function Admin() {
 
                 <td style={{
                   ...styles.td,
-                  color: expired ? "#ef4444" : "#22c55e"
+                  color: expired ? "red" : "lime"
                 }}>
                   {expired ? "Expired" : "Active"}
                 </td>
@@ -116,9 +131,19 @@ function Admin() {
                 <td style={styles.td}>{m.gender}</td>
 
                 <td style={styles.td}>
-                  <button style={styles.editBtn} onClick={() => handleEdit(m)}>Edit</button>
-                  <button style={styles.deleteBtn} onClick={() => handleDelete(m._id)}>Delete</button>
-                  <button style={styles.historyBtn} onClick={() => setHistoryData(m)}>History</button>
+                  <button
+                    style={styles.editBtn}
+                    onClick={() => handleEdit(m)}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    style={styles.deleteBtn}
+                    onClick={() => handleDelete(m._id)}
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             );
@@ -132,33 +157,75 @@ function Admin() {
           <div style={styles.modalContent}>
             <h2>Edit Member</h2>
 
-            <input value={editData.name} onChange={(e)=>setEditData({...editData,name:e.target.value})}/>
-            <input value={editData.age} onChange={(e)=>setEditData({...editData,age:e.target.value})}/>
-            <input value={editData.phone} onChange={(e)=>setEditData({...editData,phone:e.target.value})}/>
+            <div style={styles.formGrid}>
+              <input
+                placeholder="Name"
+                value={editData.name}
+                onChange={(e)=>setEditData({...editData,name:e.target.value})}
+              />
 
-            <button onClick={handleUpdate}>Update</button>
-            <button onClick={()=>setEditData(null)}>Cancel</button>
-          </div>
-        </div>
-      )}
+              <input
+                placeholder="Age"
+                value={editData.age}
+                onChange={(e)=>setEditData({...editData,age:e.target.value})}
+              />
 
-      {/* HISTORY MODAL */}
-      {historyData && (
-        <div style={styles.modal}>
-          <div style={styles.modalContent}>
-            <h2>Membership History</h2>
+              <input
+                placeholder="Phone"
+                value={editData.phone}
+                onChange={(e)=>setEditData({...editData,phone:e.target.value})}
+              />
 
-            {historyData.history?.length ? (
-              historyData.history.map((h, i) => (
-                <div key={i} style={{ marginBottom: "10px" }}>
-                  {h.membership} | {h.startDate} → {h.endDate}
-                </div>
-              ))
-            ) : (
-              <p>No history available</p>
-            )}
+              <select
+                value={editData.membership}
+                onChange={(e)=>setEditData({...editData,membership:e.target.value})}
+              >
+                <option>1 Month</option>
+                <option>3 Months</option>
+                <option>6 Months</option>
+                <option>1 Year</option>
+              </select>
 
-            <button onClick={() => setHistoryData(null)}>Close</button>
+              <input
+                type="date"
+                value={editData.startDate?.split("T")[0]}
+                onChange={(e)=>setEditData({...editData,startDate:e.target.value})}
+              />
+
+              <select
+                value={editData.payment}
+                onChange={(e)=>setEditData({...editData,payment:e.target.value})}
+              >
+                <option>Cash</option>
+                <option>UPI</option>
+              </select>
+
+              <select
+                value={editData.training}
+                onChange={(e)=>setEditData({...editData,training:e.target.value})}
+              >
+                <option>No</option>
+                <option>Yes</option>
+              </select>
+
+              <select
+                value={editData.gender}
+                onChange={(e)=>setEditData({...editData,gender:e.target.value})}
+              >
+                <option>Male</option>
+                <option>Female</option>
+              </select>
+            </div>
+
+            <div style={styles.modalActions}>
+              <button style={styles.updateBtn} onClick={handleUpdate}>
+                Update
+              </button>
+              <button style={styles.cancelBtn} onClick={()=>setEditData(null)}>
+                Cancel
+              </button>
+            </div>
+
           </div>
         </div>
       )}
@@ -174,11 +241,14 @@ const styles = {
   th:{ padding:"10px"},
   tr:{ background:"#0f172a"},
   td:{ padding:"10px"},
-  editBtn:{ background:"#22c55e", color:"#fff", marginRight:"5px" },
-  deleteBtn:{ background:"#ef4444", color:"#fff", marginRight:"5px" },
-  historyBtn:{ background:"#f59e0b", color:"#fff" },
+  editBtn:{ background:"#22c55e", color:"#fff", marginRight:"5px", border:"none", padding:"6px 10px"},
+  deleteBtn:{ background:"#ef4444", color:"#fff", border:"none", padding:"6px 10px"},
   modal:{ position:"fixed", top:0,left:0,width:"100%",height:"100%",background:"rgba(0,0,0,0.7)",display:"flex",justifyContent:"center",alignItems:"center"},
-  modalContent:{ background:"#0f172a",padding:"20px"}
+  modalContent:{ background:"#0f172a",padding:"20px",borderRadius:"10px",width:"500px"},
+  formGrid:{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginBottom:"15px"},
+  modalActions:{ display:"flex", justifyContent:"flex-end", gap:"10px"},
+  updateBtn:{ background:"#0ea5e9", color:"#fff", border:"none", padding:"8px 12px"},
+  cancelBtn:{ background:"#64748b", color:"#fff", border:"none", padding:"8px 12px"}
 };
 
 export default Admin;
