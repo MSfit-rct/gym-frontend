@@ -9,6 +9,7 @@ function Admin() {
   const [members, setMembers] = useState([]);
   const [search, setSearch] = useState("");
   const [editData, setEditData] = useState(null);
+  const [historyData, setHistoryData] = useState(null);
 
   useEffect(() => {
     if (!localStorage.getItem("auth")) {
@@ -88,8 +89,18 @@ function Admin() {
     <div style={styles.container}>
       <h1 style={styles.title}>Admin Dashboard</h1>
 
+      <div style={styles.stats}>
+        <div style={styles.card}>Total: {members.length}</div>
+        <div style={styles.card}>
+          UPI: {members.filter(m => m.payment === "UPI").length}
+        </div>
+        <div style={styles.card}>
+          Cash: {members.filter(m => m.payment === "Cash").length}
+        </div>
+      </div>
+
       <input
-        placeholder="Search by name..."
+        placeholder="Search member..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         style={styles.input}
@@ -120,8 +131,8 @@ function Admin() {
                 <td style={styles.td}>{expiry?.toISOString().split("T")[0]}</td>
 
                 <td style={{
-                  ...styles.td,
-                  color: expired ? "red" : "lime"
+                  ...styles.status,
+                  background: expired ? "#7f1d1d" : "#064e3b"
                 }}>
                   {expired ? "Expired" : "Active"}
                 </td>
@@ -131,19 +142,9 @@ function Admin() {
                 <td style={styles.td}>{m.gender}</td>
 
                 <td style={styles.td}>
-                  <button
-                    style={styles.editBtn}
-                    onClick={() => handleEdit(m)}
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    style={styles.deleteBtn}
-                    onClick={() => handleDelete(m._id)}
-                  >
-                    Delete
-                  </button>
+                  <button style={styles.editBtn} onClick={() => handleEdit(m)}>Edit</button>
+                  <button style={styles.deleteBtn} onClick={() => handleDelete(m._id)}>Delete</button>
+                  <button style={styles.historyBtn} onClick={() => setHistoryData(m)}>History</button>
                 </td>
               </tr>
             );
@@ -158,28 +159,12 @@ function Admin() {
             <h2>Edit Member</h2>
 
             <div style={styles.formGrid}>
-              <input
-                placeholder="Name"
-                value={editData.name}
-                onChange={(e)=>setEditData({...editData,name:e.target.value})}
-              />
+              <input value={editData.name} onChange={(e)=>setEditData({...editData,name:e.target.value})}/>
+              <input value={editData.age} onChange={(e)=>setEditData({...editData,age:e.target.value})}/>
+              <input value={editData.phone} onChange={(e)=>setEditData({...editData,phone:e.target.value})}/>
 
-              <input
-                placeholder="Age"
-                value={editData.age}
-                onChange={(e)=>setEditData({...editData,age:e.target.value})}
-              />
-
-              <input
-                placeholder="Phone"
-                value={editData.phone}
-                onChange={(e)=>setEditData({...editData,phone:e.target.value})}
-              />
-
-              <select
-                value={editData.membership}
-                onChange={(e)=>setEditData({...editData,membership:e.target.value})}
-              >
+              <select value={editData.membership}
+                onChange={(e)=>setEditData({...editData,membership:e.target.value})}>
                 <option>1 Month</option>
                 <option>3 Months</option>
                 <option>6 Months</option>
@@ -192,40 +177,59 @@ function Admin() {
                 onChange={(e)=>setEditData({...editData,startDate:e.target.value})}
               />
 
-              <select
-                value={editData.payment}
-                onChange={(e)=>setEditData({...editData,payment:e.target.value})}
-              >
+              <select value={editData.payment}
+                onChange={(e)=>setEditData({...editData,payment:e.target.value})}>
                 <option>Cash</option>
                 <option>UPI</option>
               </select>
 
-              <select
-                value={editData.training}
-                onChange={(e)=>setEditData({...editData,training:e.target.value})}
-              >
+              <select value={editData.training}
+                onChange={(e)=>setEditData({...editData,training:e.target.value})}>
                 <option>No</option>
                 <option>Yes</option>
               </select>
 
-              <select
-                value={editData.gender}
-                onChange={(e)=>setEditData({...editData,gender:e.target.value})}
-              >
+              <select value={editData.gender}
+                onChange={(e)=>setEditData({...editData,gender:e.target.value})}>
                 <option>Male</option>
                 <option>Female</option>
               </select>
             </div>
 
             <div style={styles.modalActions}>
-              <button style={styles.updateBtn} onClick={handleUpdate}>
-                Update
-              </button>
-              <button style={styles.cancelBtn} onClick={()=>setEditData(null)}>
-                Cancel
-              </button>
+              <button style={styles.updateBtn} onClick={handleUpdate}>Update</button>
+              <button style={styles.cancelBtn} onClick={()=>setEditData(null)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* HISTORY MODAL */}
+      {historyData && (
+        <div style={styles.modal}>
+          <div style={styles.modalContent}>
+            <h2>{historyData.name} - History</h2>
+
+            {/* CURRENT */}
+            <div style={styles.historyCard}>
+              <b>Current</b>
+              <p>{historyData.membership} | {historyData.startDate}</p>
             </div>
 
+            {/* PAST */}
+            {historyData.history?.length ? (
+              historyData.history.map((h, i) => (
+                <div key={i} style={styles.historyItem}>
+                  {h.membership} | {h.startDate} → {h.endDate}
+                </div>
+              ))
+            ) : (
+              <p>No past history</p>
+            )}
+
+            <button style={styles.cancelBtn} onClick={()=>setHistoryData(null)}>
+              Close
+            </button>
           </div>
         </div>
       )}
@@ -234,21 +238,27 @@ function Admin() {
 }
 
 const styles = {
-  container:{ padding:"30px", background:"#020617", minHeight:"100vh", color:"#fff"},
+  container:{ padding:"30px", background:"#020617", minHeight:"100vh", color:"#fff", fontFamily:"sans-serif"},
   title:{ fontSize:"28px", marginBottom:"20px"},
-  input:{ padding:"10px", marginBottom:"20px"},
-  table:{ width:"100%"},
-  th:{ padding:"10px"},
+  stats:{ display:"flex", gap:"20px", marginBottom:"20px"},
+  card:{ flex:1, padding:"20px", borderRadius:"12px", background:"#0ea5e9"},
+  input:{ padding:"10px", marginBottom:"20px", borderRadius:"8px"},
+  table:{ width:"100%", borderSpacing:"0 8px"},
+  th:{ textAlign:"left", padding:"10px", color:"#94a3b8"},
   tr:{ background:"#0f172a"},
-  td:{ padding:"10px"},
-  editBtn:{ background:"#22c55e", color:"#fff", marginRight:"5px", border:"none", padding:"6px 10px"},
-  deleteBtn:{ background:"#ef4444", color:"#fff", border:"none", padding:"6px 10px"},
+  td:{ padding:"12px"},
+  status:{ padding:"6px 10px", borderRadius:"6px", textAlign:"center"},
+  editBtn:{ background:"#22c55e", color:"#fff", marginRight:"5px", border:"none", padding:"6px 10px", borderRadius:"6px"},
+  deleteBtn:{ background:"#ef4444", color:"#fff", marginRight:"5px", border:"none", padding:"6px 10px", borderRadius:"6px"},
+  historyBtn:{ background:"#f59e0b", color:"#fff", border:"none", padding:"6px 10px", borderRadius:"6px"},
   modal:{ position:"fixed", top:0,left:0,width:"100%",height:"100%",background:"rgba(0,0,0,0.7)",display:"flex",justifyContent:"center",alignItems:"center"},
   modalContent:{ background:"#0f172a",padding:"20px",borderRadius:"10px",width:"500px"},
   formGrid:{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginBottom:"15px"},
   modalActions:{ display:"flex", justifyContent:"flex-end", gap:"10px"},
   updateBtn:{ background:"#0ea5e9", color:"#fff", border:"none", padding:"8px 12px"},
-  cancelBtn:{ background:"#64748b", color:"#fff", border:"none", padding:"8px 12px"}
+  cancelBtn:{ background:"#64748b", color:"#fff", border:"none", padding:"8px 12px"},
+  historyCard:{ background:"#1e293b", padding:"10px", borderRadius:"8px", marginBottom:"10px"},
+  historyItem:{ background:"#020617", padding:"8px", marginBottom:"6px", borderRadius:"6px"}
 };
 
 export default Admin;
