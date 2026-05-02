@@ -17,8 +17,7 @@ function Admin() {
 
   const fetchMembers = async () => {
     const res = await fetch(`${API}/members`);
-    const data = await res.json();
-    setMembers(data);
+    setMembers(await res.json());
   };
 
   useEffect(() => { fetchMembers(); }, []);
@@ -43,7 +42,6 @@ function Admin() {
   };
 
   const getExpiry = (start, plan) => {
-    if (!start) return "";
     const d = new Date(start);
     if (plan === "1 Month") d.setMonth(d.getMonth() + 1);
     if (plan === "3 Months") d.setMonth(d.getMonth() + 3);
@@ -52,16 +50,12 @@ function Admin() {
     return d.toISOString().split("T")[0];
   };
 
-  const filtered = members.filter(m =>
-    (m.name || "").toLowerCase().includes(search.toLowerCase())
-  );
-
   return (
     <div style={styles.container}>
-      <h1>Admin Dashboard</h1>
+      <h1 style={styles.title}>Admin Dashboard</h1>
 
       <input
-        placeholder="Search..."
+        placeholder="Search member..."
         value={search}
         onChange={(e)=>setSearch(e.target.value)}
         style={styles.input}
@@ -76,29 +70,37 @@ function Admin() {
         </thead>
 
         <tbody>
-          {filtered.map(m => {
+          {members.filter(m => m.name.toLowerCase().includes(search.toLowerCase()))
+          .map(m => {
             const expiry = getExpiry(m.startDate, m.membership);
             const expired = new Date() > new Date(expiry);
 
             return (
-              <tr key={m._id}>
+              <tr key={m._id} style={styles.row}>
                 <td>{m.name}</td>
                 <td>{m.age}</td>
                 <td>{m.phone}</td>
                 <td>{m.membership}</td>
                 <td>{m.startDate}</td>
                 <td>{expiry}</td>
-                <td style={{color: expired ? "red" : "lime"}}>
-                  {expired ? "Expired" : "Active"}
+
+                <td>
+                  <span style={{
+                    ...styles.badge,
+                    background: expired ? "#7f1d1d" : "#064e3b"
+                  }}>
+                    {expired ? "Expired" : "Active"}
+                  </span>
                 </td>
+
                 <td>{m.payment}</td>
                 <td>{m.training}</td>
                 <td>{m.gender}</td>
 
                 <td>
-                  <button onClick={()=>handleEdit(m)}>Edit</button>
-                  <button onClick={()=>handleDelete(m._id)}>Delete</button>
-                  <button onClick={()=>setHistoryData(m)}>History</button>
+                  <button style={styles.edit} onClick={()=>handleEdit(m)}>Edit</button>
+                  <button style={styles.delete} onClick={()=>handleDelete(m._id)}>Delete</button>
+                  <button style={styles.history} onClick={()=>setHistoryData(m)}>History</button>
                 </td>
               </tr>
             );
@@ -106,68 +108,71 @@ function Admin() {
         </tbody>
       </table>
 
-      {/* EDIT */}
+      {/* EDIT MODAL */}
       {editData && (
         <div style={styles.modal}>
-          <div style={styles.box}>
+          <div style={styles.card}>
             <h2>Edit Member</h2>
 
-            <input placeholder="Name" value={editData.name || ""} onChange={(e)=>setEditData({...editData,name:e.target.value})}/>
-            <input placeholder="Age" value={editData.age || ""} onChange={(e)=>setEditData({...editData,age:e.target.value})}/>
-            <input placeholder="Phone" value={editData.phone || ""} onChange={(e)=>setEditData({...editData,phone:e.target.value})}/>
+            <div style={styles.grid}>
+              <input placeholder="Name" value={editData.name} onChange={e=>setEditData({...editData,name:e.target.value})}/>
+              <input placeholder="Age" value={editData.age} onChange={e=>setEditData({...editData,age:e.target.value})}/>
+              <input placeholder="Phone" value={editData.phone} onChange={e=>setEditData({...editData,phone:e.target.value})}/>
+              
+              <select value={editData.membership} onChange={e=>setEditData({...editData,membership:e.target.value})}>
+                <option>1 Month</option>
+                <option>3 Months</option>
+                <option>6 Months</option>
+                <option>1 Year</option>
+              </select>
 
-            <select value={editData.membership} onChange={(e)=>setEditData({...editData,membership:e.target.value})}>
-              <option>1 Month</option>
-              <option>3 Months</option>
-              <option>6 Months</option>
-              <option>1 Year</option>
-            </select>
+              <input type="date"
+                value={editData.startDate?.split("T")[0]}
+                onChange={e=>setEditData({...editData,startDate:e.target.value})}
+              />
 
-            <input type="date"
-              value={editData.startDate?.split("T")[0]}
-              onChange={(e)=>setEditData({...editData,startDate:e.target.value})}
-            />
+              <select value={editData.payment} onChange={e=>setEditData({...editData,payment:e.target.value})}>
+                <option>Cash</option>
+                <option>UPI</option>
+              </select>
 
-            <select value={editData.payment} onChange={(e)=>setEditData({...editData,payment:e.target.value})}>
-              <option>Cash</option>
-              <option>UPI</option>
-            </select>
+              <select value={editData.training} onChange={e=>setEditData({...editData,training:e.target.value})}>
+                <option>No</option>
+                <option>Yes</option>
+              </select>
 
-            <select value={editData.training} onChange={(e)=>setEditData({...editData,training:e.target.value})}>
-              <option>No</option>
-              <option>Yes</option>
-            </select>
+              <select value={editData.gender} onChange={e=>setEditData({...editData,gender:e.target.value})}>
+                <option>Male</option>
+                <option>Female</option>
+              </select>
+            </div>
 
-            <select value={editData.gender} onChange={(e)=>setEditData({...editData,gender:e.target.value})}>
-              <option>Male</option>
-              <option>Female</option>
-            </select>
-
-            <button onClick={handleUpdate}>Update</button>
-            <button onClick={()=>setEditData(null)}>Cancel</button>
+            <button style={styles.update} onClick={handleUpdate}>Update</button>
+            <button style={styles.cancel} onClick={()=>setEditData(null)}>Cancel</button>
           </div>
         </div>
       )}
 
-      {/* HISTORY */}
+      {/* HISTORY MODAL */}
       {historyData && (
         <div style={styles.modal}>
-          <div style={styles.box}>
+          <div style={styles.card}>
             <h2>{historyData.name} History</h2>
 
-            <h4>Current</h4>
-            <p>{historyData.membership} | {historyData.startDate}</p>
+            <div style={styles.historyBox}>
+              <b>Current</b>
+              <p>{historyData.membership} | {historyData.startDate}</p>
+            </div>
 
-            <h4>Past</h4>
-            {historyData.history?.length ? (
-              historyData.history.map((h,i)=>(
-                <div key={i}>
-                  {h.membership} | {h.startDate} → {h.endDate}
-                </div>
-              ))
-            ) : <p>No history</p>}
+            {historyData.history?.map((h,i)=>(
+              <div key={i} style={styles.historyItem}>
+                <b>{h.membership}</b>
+                <div>{h.startDate} → {h.endDate}</div>
+                <small>{h.payment}</small>
+              </div>
+            ))}
 
-            <button onClick={()=>setHistoryData(null)}>Close</button>
+            <button style={styles.cancel} onClick={()=>setHistoryData(null)}>Close</button>
           </div>
         </div>
       )}
@@ -176,11 +181,22 @@ function Admin() {
 }
 
 const styles = {
-  container:{ padding:20, background:"#020617", color:"#fff", minHeight:"100vh"},
-  input:{ padding:10, marginBottom:20},
-  table:{ width:"100%"},
+  container:{ padding:30, background:"#020617", color:"#fff", minHeight:"100vh"},
+  title:{ marginBottom:20 },
+  input:{ padding:10, marginBottom:20, borderRadius:8 },
+  table:{ width:"100%", borderSpacing:"0 10px" },
+  row:{ background:"#0f172a" },
+  badge:{ padding:"5px 10px", borderRadius:20 },
+  edit:{ background:"#22c55e", marginRight:5, padding:"5px 10px" },
+  delete:{ background:"#ef4444", marginRight:5, padding:"5px 10px" },
+  history:{ background:"#f59e0b", padding:"5px 10px" },
   modal:{ position:"fixed", top:0,left:0,width:"100%",height:"100%",background:"rgba(0,0,0,0.7)",display:"flex",justifyContent:"center",alignItems:"center"},
-  box:{ background:"#0f172a", padding:20}
+  card:{ background:"#0f172a", padding:25, borderRadius:12, width:500 },
+  grid:{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 },
+  update:{ background:"#0ea5e9", marginTop:10, padding:8 },
+  cancel:{ background:"#64748b", marginTop:10, marginLeft:10, padding:8 },
+  historyBox:{ background:"#1e293b", padding:10, borderRadius:8 },
+  historyItem:{ background:"#020617", padding:10, marginTop:10, borderRadius:8 }
 };
 
 export default Admin;
